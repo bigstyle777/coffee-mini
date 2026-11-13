@@ -1,0 +1,130 @@
+<view class="page" wx:if="{{!authorized}}">
+    <view class="gate card">
+        <text class="gate-title">店长验证</text>
+        <text class="gate-desc">输入店长口令后可以接单、改价、设置售罄。演示口令是 8888。</text>
+        <input
+            class="gate-input"
+            type="number"
+            password="{{true}}"
+            placeholder="请输入口令"
+            placeholder-class="gate-placeholder"
+            value="{{passInput}}"
+            bindinput="handlePassInput"
+        />
+        <view class="gate-button" bindtap="handlePassSubmit">进入店长端</view>
+        <text class="gate-hint">真实项目里这里应改为服务端下发的角色权限，前端口令只能防误触。</text>
+    </view>
+</view>
+
+<view class="page" wx:if="{{authorized}}">    <view class="stats-row">
+        <view class="stat-card card">
+            <text class="stat-value">{{stats.todayCount}}</text>
+            <text class="stat-label">今日订单</text>
+        </view>
+        <view class="stat-card card">
+            <text class="stat-value">{{stats.todayRevenueText}}</text>
+            <text class="stat-label">今日营业额</text>
+        </view>
+        <view class="stat-card card">
+            <text class="stat-value">{{stats.pendingCount}}</text>
+            <text class="stat-label">待接单</text>
+        </view>
+        <view class="stat-card card">
+            <text class="stat-value">{{stats.makingCount}}</text>
+            <text class="stat-label">制作中</text>
+        </view>
+    </view>
+
+    <scroll-view class="tab-bar" scroll-x enable-flex show-scrollbar="{{false}}">
+        <view
+            class="tab-item {{activeTab === item.id ? 'tab-item-active' : ''}}"
+            wx:for="{{tabs}}"
+            wx:key="id"
+            data-id="{{item.id}}"
+            bindtap="handleTabTap"
+        >
+            {{item.name}}
+        </view>
+    </scroll-view>
+
+    <view class="empty-block card" wx:if="{{viewState === 'empty'}}">
+        <text class="empty-title">这里还没有订单</text>
+        <text class="empty-text">顾客下单后，订单会出现在「待接单」里。</text>
+    </view>
+
+    <view class="order-list" wx:else>
+        <view class="admin-order card" wx:for="{{orders}}" wx:key="id">
+            <view class="admin-order-head">
+                <view class="admin-order-copy">
+                    <text class="admin-order-no">{{item.no}}</text>
+                    <text class="admin-order-time">{{item.timeText}} · {{item.pickupName}} · {{item.itemCount}} 件</text>
+                </view>
+                <view class="status-pill status-{{item.status}}">
+                    <text class="status-text">{{item.statusText}}</text>
+                </view>
+            </view>
+
+            <view class="admin-order-items">
+                <view class="admin-order-item" wx:for="{{item.items}}" wx:for-item="line" wx:key="key">
+                    <text class="admin-item-name">{{line.name}} ×{{line.qty}}</text>
+                    <text class="admin-item-spec">{{line.specText}}</text>
+                    <text class="admin-item-note" wx:if="{{line.note}}">备注：{{line.note}}</text>
+                </view>
+            </view>
+
+            <text class="admin-order-note" wx:if="{{item.note}}">整单备注：{{item.note}}</text>
+
+            <view class="admin-order-foot">
+                <text class="admin-order-total">{{item.totalText}}</text>
+                <view class="admin-order-actions">
+                    <view class="ghost-button ghost-button-danger" wx:if="{{item.canCancel}}" data-id="{{item.id}}" bindtap="handleCancelOrder">取消</view>
+                    <view class="solid-button" wx:if="{{item.canStart}}" data-id="{{item.id}}" data-next="making" bindtap="handleOrderAction">接单</view>
+                    <view class="solid-button" wx:if="{{item.canReady}}" data-id="{{item.id}}" data-next="ready" bindtap="handleOrderAction">做好了</view>
+                    <view class="solid-button" wx:if="{{item.canFinish}}" data-id="{{item.id}}" data-next="done" bindtap="handleOrderAction">已完成</view>
+                </view>
+            </view>
+        </view>
+    </view>
+
+    <view class="section">
+        <view class="section-head">
+            <text class="section-title">菜单管理</text>
+            <text class="section-hint">改价或售罄，立即对顾客生效</text>
+        </view>
+        <view class="menu-card card">
+            <view class="menu-row" wx:for="{{menu}}" wx:key="id">
+                <view class="menu-copy">
+                    <text class="menu-name">{{item.name}}</text>
+                    <text class="menu-price">{{item.priceText}}</text>
+                </view>
+                <view class="menu-actions">
+                    <input
+                        class="price-input"
+                        type="digit"
+                        value="{{item.price}}"
+                        data-id="{{item.id}}"
+                        bindblur="handlePriceBlur"
+                    />
+                    <switch
+                        class="offline-switch"
+                        checked="{{item.offline}}"
+                        color="#3d2b1f"
+                        data-id="{{item.id}}"
+                        bindchange="handleOfflineChange"
+                    />
+                    <text class="switch-label">{{item.offline ? '售罄' : '在售'}}</text>
+                </view>
+            </view>
+        </view>
+    </view>
+
+    <view class="section">
+        <text class="section-title">演示工具</text>
+        <view class="demo-actions">
+            <view class="ghost-button" bindtap="handleResetMenu">恢复默认菜单</view>
+            <view class="ghost-button ghost-button-danger" bindtap="handleClearOrders">清空订单记录</view>
+            <view class="ghost-button" bindtap="goMenu">回到点单页</view>
+        </view>
+        <text class="demo-hint">所有数据都在本机 storage 里，清空后不可恢复。真实项目里这些操作应放在服务端并做权限校验。</text>
+    </view>
+</view>

@@ -1,0 +1,96 @@
+<view class="page">
+    <view class="empty-block card" wx:if="{{viewState === 'empty'}}">
+        <text class="empty-title">购物车是空的</text>
+        <text class="empty-text">挑一杯喜欢的，先从菜单开始。</text>
+        <view class="primary-button" bindtap="goMenu">去点单</view>
+    </view>
+
+    <view class="empty-block card" wx:elif="{{viewState === 'error'}}">
+        <text class="empty-title">购物车读取失败</text>
+        <text class="empty-text">数据没能从本机读出来，请重新进入页面。</text>
+    </view>
+
+    <block wx:elif="{{viewState === 'ready'}}">
+        <view class="pickup-card card">
+            <text class="pickup-title">取餐方式</text>
+            <view class="chip-row">
+                <view
+                    class="chip {{pickupIndex === index ? 'chip-active' : ''}}"
+                    wx:for="{{pickupTypes}}"
+                    wx:key="id"
+                    data-index="{{index}}"
+                    bindtap="handlePickupTap"
+                >
+                    {{item.name}}
+                </view>
+            </view>
+            <text class="pickup-hint">高峰时段出杯约 5-8 分钟，做好会通知你。</text>
+        </view>
+
+        <view class="list-card card">
+            <view class="list-head">
+                <text class="section-title">已选 {{itemCount}} 件</text>
+                <text class="discount-hint">{{discountHint}}</text>
+            </view>
+
+            <view class="line" wx:for="{{lines}}" wx:key="id">
+                <view class="line-thumb" style="background: {{item.gradient}}">
+                    <text class="line-thumb-text">{{item.short}}</text>
+                </view>
+                <view class="line-body">
+                    <view class="line-title-row">
+                        <text class="line-name">{{item.name}}</text>
+                        <text class="line-remove" data-id="{{item.id}}" bindtap="handleRemove">删除</text>
+                    </view>
+                    <text class="line-spec">{{item.specText}}</text>
+                    <text class="line-note" wx:if="{{item.note}}">备注：{{item.note}}</text>
+                    <view class="line-foot">
+                        <text class="line-price">{{item.lineTotalText}}</text>
+                        <view class="stepper">
+                            <view class="stepper-btn" data-id="{{item.id}}" bindtap="handleDecrease">−</view>
+                            <text class="stepper-value">{{item.qty}}</text>
+                            <view class="stepper-btn stepper-btn-add" data-id="{{item.id}}" bindtap="handleIncrease">+</view>
+                        </view>
+                    </view>
+                </view>
+            </view>
+        </view>
+
+        <view class="note-card card">
+            <text class="section-title">整单备注</text>
+            <textarea
+                class="note-input"
+                placeholder="杯子需要两个杯套？一起打包？"
+                placeholder-class="note-placeholder"
+                maxlength="60"
+                value="{{note}}"
+                bindinput="handleNoteInput"
+            ></textarea>
+        </view>
+
+        <view class="summary-card card">
+            <view class="summary-row">
+                <text class="summary-label">商品小计</text>
+                <text class="summary-value">{{subtotalText}}</text>
+            </view>
+            <view class="summary-row">
+                <text class="summary-label">优惠</text>
+                <text class="summary-value summary-value-accent">{{discountText}}</text>
+            </view>
+            <view class="summary-row summary-row-total">
+                <text class="summary-label-total">应付</text>
+                <text class="summary-total">{{totalText}}</text>
+            </view>
+        </view>
+    </block>
+
+    <view class="bottom-bar" wx:if="{{viewState === 'ready'}}">
+        <view class="bottom-copy">
+            <text class="bottom-total">{{totalText}}</text>
+            <text class="bottom-hint">共 {{itemCount}} 件 · {{pickupTypes[pickupIndex].name}}</text>
+        </view>
+        <view class="submit-button {{submitting ? 'submit-button-busy' : ''}}" bindtap="handleSubmit">
+            {{submitting ? '提交中…' : '提交订单'}}
+        </view>
+    </view>
+</view>

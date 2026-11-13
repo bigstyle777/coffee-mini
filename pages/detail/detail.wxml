@@ -1,0 +1,118 @@
+<view class="page" wx:if="{{viewState === 'error'}}">
+    <view class="empty-block card">
+        <text class="empty-title">没有找到这款商品</text>
+        <text class="empty-text">它可能已经下架了。</text>
+        <view class="back-home" bindtap="goBackHome">回到点单页</view>
+    </view>
+</view>
+
+<view class="page" wx:elif="{{viewState === 'ready'}}">
+    <view class="hero" style="background: {{product.gradient}}">
+        <text class="hero-short">{{product.short}}</text>
+        <text class="hero-en">{{product.en}}</text>
+    </view>
+
+    <view class="offline-banner" wx:if="{{offline}}">
+        <text class="offline-banner-text">这款今天卖完了，店里补货后会重新上架</text>
+    </view>
+
+    <view class="intro card">
+        <view class="intro-title-row">
+            <text class="intro-name">{{product.name}}</text>
+            <text class="product-tag" wx:if="{{product.tag}}">{{product.tag}}</text>
+        </view>
+        <text class="intro-desc">{{product.desc}}</text>
+        <text class="intro-base">标准价 {{basePriceText}} 起</text>
+    </view>
+
+    <view class="option-card card" wx:if="{{drinkable}}">
+        <text class="option-title">杯型</text>
+        <view class="chip-row">
+            <view
+                class="chip {{sizeIndex === index ? 'chip-active' : ''}}"
+                wx:for="{{sizes}}"
+                wx:key="id"
+                data-index="{{index}}"
+                bindtap="handleSizeTap"
+            >
+                <text class="chip-name">{{item.name}}</text>
+                <text class="chip-extra" wx:if="{{item.extra > 0}}">+¥{{item.extra}}</text>
+            </view>
+        </view>
+    </view>
+
+    <view class="option-card card" wx:if="{{drinkable}}">
+        <text class="option-title">温度</text>
+        <view class="chip-row">
+            <view
+                class="chip {{tempIndex === index ? 'chip-active' : ''}}"
+                wx:for="{{temps}}"
+                wx:key="id"
+                data-index="{{index}}"
+                bindtap="handleTempTap"
+            >
+                <text class="chip-name">{{item.name}}</text>
+            </view>
+        </view>
+    </view>
+
+    <view class="option-card card" wx:if="{{drinkable}}">
+        <text class="option-title">糖度</text>
+        <view class="chip-row">
+            <view
+                class="chip {{sugarIndex === index ? 'chip-active' : ''}}"
+                wx:for="{{sugars}}"
+                wx:key="id"
+                data-index="{{index}}"
+                bindtap="handleSugarTap"
+            >
+                <text class="chip-name">{{item.name}}</text>
+            </view>
+        </view>
+    </view>
+
+    <view class="option-card card" wx:if="{{drinkable}}">
+        <text class="option-title">加料（可多选）</text>
+        <view class="extra-list">
+            <view
+                class="extra-row"
+                wx:for="{{extras}}"
+                wx:key="id"
+                data-index="{{index}}"
+                bindtap="handleExtraTap"
+            >
+                <text class="extra-name">{{item.name}}</text>
+                <view class="extra-right">
+                    <text class="extra-price">{{item.priceText}}</text>
+                    <view class="checkbox {{item.checked ? 'checkbox-on' : ''}}">
+                        <text class="checkbox-mark" wx:if="{{item.checked}}">✓</text>
+                    </view>
+                </view>
+            </view>
+        </view>
+    </view>
+
+    <view class="option-card card">
+        <text class="option-title">备注</text>
+        <textarea
+            class="note-input"
+            placeholder="例如：不要太烫、少冰、分杯装"
+            placeholder-class="note-placeholder"
+            maxlength="50"
+            value="{{note}}"
+            bindinput="handleNoteInput"
+        ></textarea>
+    </view>
+
+    <view class="bottom-bar">
+        <view class="qty-stepper">
+            <view class="stepper-btn" bindtap="handleQtyMinus">−</view>
+            <text class="stepper-value">{{qty}}</text>
+            <view class="stepper-btn stepper-btn-add" bindtap="handleQtyPlus">+</view>
+        </view>
+        <view class="add-button {{offline ? 'add-button-disabled' : ''}}" bindtap="handleAdd">
+            <text class="add-button-price">{{totalText}}</text>
+            <text class="add-button-text">{{offline ? '已售罄' : '加入购物车'}}</text>
+        </view>
+    </view>
+</view>

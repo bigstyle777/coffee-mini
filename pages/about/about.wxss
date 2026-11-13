@@ -1,0 +1,131 @@
+.page {
+    padding-bottom: 80rpx;
+}
+
+.brand {
+    display: flex;
+    padding: 36rpx 32rpx;
+    flex-direction: column;
+}
+
+.brand-name {
+    font-size: 40rpx;
+    font-weight: 700;
+}
+
+.brand-version {
+    margin-top: 10rpx;
+    color: #9a6534;
+    font-size: 22rpx;
+}
+
+.brand-desc {
+    margin-top: 18rpx;
+    color: #7a6a5c;
+    font-size: 24rpx;
+    line-height: 1.7;
+}
+
+.info-card {
+    padding: 28rpx;
+    margin-top: 20rpx;
+}
+
+.card-title {
+    display: block;
+    margin-bottom: 16rpx;
+    font-size: 28rpx;
+    font-weight: 600;
+}
+
+.info-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 12rpx 0;
+}
+
+.info-label {
+    color: #8b7b6e;
+    font-size: 24rpx;
+}
+
+.info-value {
+    max-width: 440rpx;
+    color: #3d2b1f;
+    font-size: 24rpx;
+    text-align: right;
+}
+
+.storage-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16rpx 0;
+    border-bottom: 2rpx solid #f7f1e9;
+}
+
+.storage-copy {
+    display: flex;
+    flex-direction: column;
+}
+
+.storage-name {
+    font-size: 24rpx;
+}
+
+.storage-key {
+    margin-top: 4rpx;
+    color: #b3a294;
+    font-size: 20rpx;
+}
+
+.storage-value {
+    color: #3d2b1f;
+    font-size: 24rpx;
+    font-weight: 600;
+}
+
+.paragraph {
+    display: block;
+    margin-top: 12rpx;
+    color: #7a6a5c;
+    font-size: 24rpx;
+    line-height: 1.75;
+}
+
+.step {
+    display: flex;
+    align-items: flex-start;
+    padding: 10rpx 0;
+}
+
+.step-index {
+    display: flex;
+    width: 40rpx;
+    height: 40rpx;
+    align-items: center;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: #f3e8db;
+    color: #9a6534;
+    font-size: 20rpx;
+    justify-content: center;
+}
+
+.step-text {
+    margin-left: 16rpx;
+    color: #5c4b3c;
+    font-size: 24rpx;
+    line-height: 1.6;
+}
+
+.ghost-button {
+    margin-top: 24rpx;
+    padding: 16rpx 0;
+    border: 2rpx solid #efd5d2;
+    border-radius: 999rpx;
+    color: #b4453c;
+    font-size: 24rpx;
+    text-align: center;
+}

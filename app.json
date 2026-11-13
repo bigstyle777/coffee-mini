@@ -1,0 +1,21 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/detail/detail",
+    "pages/cart/cart",
+    "pages/pay/pay",
+    "pages/orders/orders",
+    "pages/admin/admin",
+    "pages/about/about"
+  ],
+  "window": {
+    "navigationBarTitleText": "拾光咖啡",
+    "navigationBarBackgroundColor": "#f7f2ec",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f7f2ec",
+    "backgroundTextStyle": "light"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

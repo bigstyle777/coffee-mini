@@ -1,0 +1,18 @@
+# 系统与工具产生
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 微信开发者工具的个人配置（含本地路径、编译设置，不要提交）
+project.private.config.json
+
+# WorkBuddy / 脚手架缓存
+.workbuddy/
+
+# 依赖与日志
+node_modules/
+*.log
+npm-debug.log*
+
+# 本地临时产物
+*.tmp

@@ -1,0 +1,71 @@
+<view class="page">
+    <view class="brand card">
+        <text class="brand-name">{{appName}}</text>
+        <text class="brand-version">v{{version}} · 原生微信小程序 · 无后端</text>
+        <text class="brand-desc">一个用于练习与演示的咖啡点单小程序。全部数据保存在本机，不需要服务器、不需要联网、不产生任何费用。</text>
+    </view>
+
+    <view class="card info-card">
+        <text class="card-title">门店信息</text>
+        <view class="info-row">
+            <text class="info-label">门店</text>
+            <text class="info-value">{{shopName}}</text>
+        </view>
+        <view class="info-row">
+            <text class="info-label">地址</text>
+            <text class="info-value">{{shopAddress}}</text>
+        </view>
+        <view class="info-row">
+            <text class="info-label">电话</text>
+            <text class="info-value">{{shopPhone}}</text>
+        </view>
+        <view class="info-row">
+            <text class="info-label">支付</text>
+            <text class="info-value">{{mockPay ? '模拟支付（不产生真实扣款）' : '真实微信支付'}}</text>
+        </view>
+    </view>
+
+    <view class="card info-card">
+        <text class="card-title">本地数据</text>
+        <view class="storage-row" wx:for="{{storageInfo}}" wx:key="key">
+            <view class="storage-copy">
+                <text class="storage-name">{{item.name}}</text>
+                <text class="storage-key">{{item.key}}</text>
+            </view>
+            <text class="storage-value">{{item.value}}</text>
+        </view>
+        <view class="ghost-button" bindtap="handleClearAll">清除全部本地数据</view>
+    </view>
+
+    <view class="card info-card">
+        <text class="card-title">隐私说明</text>
+        <text class="paragraph">本小程序不收集、不上传任何个人信息。没有 wx.login，不读取手机号、位置、相册、通讯录，也没有任何第三方统计或广告 SDK。</text>
+        <text class="paragraph">顾客身份是一个本机随机生成的字符串，仅用于区分订单归属，删除小程序或清除缓存即消失（真实项目里应替换为服务端下发的 openid）。</text>
+    </view>
+
+    <view class="card info-card">
+        <text class="card-title">怎么试这些功能</text>
+        <view class="step">
+            <text class="step-index">1</text>
+            <text class="step-text">首页选商品加购，进购物车提交订单</text>
+        </view>
+        <view class="step">
+            <text class="step-index">2</text>
+            <text class="step-text">支付页点「确认支付」走模拟支付流程</text>
+        </view>
+        <view class="step">
+            <text class="step-index">3</text>
+            <text class="step-text">订单页右上角进「店长端」，口令 8888</text>
+        </view>
+        <view class="step">
+            <text class="step-index">4</text>
+            <text class="step-text">店长端把订单从待接单推进到已完成，还能改价和设售罄</text>
+        </view>
+    </view>
+
+    <view class="card info-card">
+        <text class="card-title">技术栈</text>
+        <text class="paragraph">原生 WXML / WXSS / JavaScript，无 npm 依赖、无框架、无云服务。数据层抽象在 utils/ 下，接口统一返回 { data, error }，替换实现即可切换数据源。</text>
+        <text class="paragraph">代码以 MIT 许可开源，仅作学习演示，商品名称与价格均为虚构数据。</text>
+    </view>
+</view>
