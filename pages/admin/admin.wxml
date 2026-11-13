@@ -13,6 +13,7 @@
         />
         <view class="gate-button" bindtap="handlePassSubmit">进入店长端</view>
         <text class="gate-hint">真实项目里这里应改为服务端下发的角色权限，前端口令只能防误触。</text>
+        <text class="gate-hint">单机演示：订单存在本机 storage，换一台手机进来是看不到顾客订单的。跨设备收单需要后端。</text>
     </view>
 </view>
 

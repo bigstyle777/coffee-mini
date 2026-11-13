@@ -38,6 +38,12 @@
     </view>
 
     <view class="card info-card">
+        <text class="card-title">单机演示的边界</text>
+        <text class="paragraph">顾客端和店长端读写的是同一台设备上的同一份本地数据。所以「店长收到订单」只在这台设备内成立，换一台手机打开，店长端是空的。</text>
+        <text class="paragraph">跨设备收单必须有后端（云数据库或自建服务），本演示没有实现，也没有用假代码充数。</text>
+    </view>
+
+    <view class="card info-card">
         <text class="card-title">隐私说明</text>
         <text class="paragraph">本小程序不收集、不上传任何个人信息。没有 wx.login，不读取手机号、位置、相册、通讯录，也没有任何第三方统计或广告 SDK。</text>
         <text class="paragraph">顾客身份是一个本机随机生成的字符串，仅用于区分订单归属，删除小程序或清除缓存即消失（真实项目里应替换为服务端下发的 openid）。</text>
