@@ -10,6 +10,6 @@ App({
 
     onLaunch() {
         // 本地存储没有初始化步骤，这里只记录一次启动，方便排查版本问题。
-        console.log('[coffee-mini] launched, useCloud =', config.useCloud);
+        console.log('[coffee-mini] launched, dataSource =', config.dataSource);
     },
 });

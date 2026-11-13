@@ -1,35 +1,9 @@
 const { makeOrderNo } = require('./format.js');
+// 状态机与展示字段统一放在 order-status.js，本地实现与云端实现共用同一套规则，
+// 避免两边各自维护一份、改一边忘另一边。
+const { STATUS, STATUS_META, canTransition, decorate } = require('./order-status.js');
 
 const ORDER_KEY = 'coffee_orders_v1';
-
-// 订单状态机：待支付 -> 已下单 -> 制作中 -> 可取餐 -> 已完成，未完成前可取消。
-const STATUS = {
-    UNPAID: 'unpaid',
-    PLACED: 'placed',
-    MAKING: 'making',
-    READY: 'ready',
-    DONE: 'done',
-    CANCELLED: 'cancelled',
-};
-
-const STATUS_META = {
-    unpaid: { text: '待支付', hint: '完成支付后门店才会收到订单' },
-    placed: { text: '已下单', hint: '门店已收到订单，等待接单' },
-    making: { text: '制作中', hint: '咖啡师正在制作，请稍候' },
-    ready: { text: '可取餐', hint: '凭订单号到吧台取餐' },
-    done: { text: '已完成', hint: '祝你喝得开心' },
-    cancelled: { text: '已取消', hint: '这笔订单已取消' },
-};
-
-// 只允许表里列出的流转，避免页面写出非法状态。
-const ALLOWED_NEXT = {
-    unpaid: ['placed', 'cancelled'],
-    placed: ['making', 'cancelled'],
-    making: ['ready', 'cancelled'],
-    ready: ['done'],
-    done: [],
-    cancelled: [],
-};
 
 function readOrders() {
     try {
@@ -58,50 +32,7 @@ function writeOrders(list) {
     }
 }
 
-function canTransition(from, to) {
-    const next = ALLOWED_NEXT[from];
-    if (!next) {
-        return false;
-    }
-    return next.indexOf(to) >= 0;
-}
-
-function decorate(order) {
-    const meta = STATUS_META[order.status] || STATUS_META.placed;
-    const items = order.items.map(function (item, index) {
-        return {
-            key: order.id + '-' + index,
-            productId: item.productId,
-            name: item.name,
-            specText: item.specText,
-            note: item.note,
-            qty: item.qty,
-            unitPrice: item.unitPrice,
-        };
-    });
-    return {
-        id: order.id,
-        no: order.no,
-        createdAt: order.createdAt,
-        paidAt: order.paidAt || 0,
-        userId: order.userId || '',
-        status: order.status,
-        statusText: meta.text,
-        statusHint: meta.hint,
-        itemCount: order.itemCount,
-        subtotal: order.subtotal,
-        discount: order.discount,
-        total: order.total,
-        pickupName: order.pickupName,
-        note: order.note || '',
-        items: items,
-        canPay: order.status === STATUS.UNPAID,
-        canCancel: order.status === STATUS.UNPAID || order.status === STATUS.PLACED,
-        canStart: order.status === STATUS.PLACED,
-        canReady: order.status === STATUS.MAKING,
-        canFinish: order.status === STATUS.READY,
-    };
-}
+// canTransition 与 decorate 由 order-status.js 提供，这里不再重复实现。
 
 function createLocalOrderStore() {
     const store = {

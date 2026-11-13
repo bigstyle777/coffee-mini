@@ -1,9 +1,9 @@
 const menuStore = require('../../utils/menu-store.js');
-const { createLocalOrderStore } = require('../../utils/order-store.js');
+const { getOrdersApi } = require('../../utils/data/index.js');
 const { createLocalCartStore } = require('../../utils/cart-store.js');
 const { formatPrice, formatDateTime } = require('../../utils/format.js');
 
-const orderStore = createLocalOrderStore();
+const ordersApi = getOrdersApi();
 const cartStore = createLocalCartStore();
 
 Page({
@@ -23,44 +23,45 @@ Page({
     },
 
     refresh() {
-        const result = orderStore.list();
-        if (result.error) {
-            this.setData({ viewState: 'error' });
-            return;
-        }
-        const raw = result.data;
-        const orders = raw.map(function (order) {
-            const items = order.items.map(function (item) {
+        const page = this;
+        ordersApi.list().then(function (result) {
+            if (result.error) {
+                page.setData({ viewState: 'error' });
+                return;
+            }
+            const orders = result.data.map(function (order) {
+                const items = order.items.map(function (item) {
+                    return {
+                        key: item.key,
+                        name: item.name,
+                        qty: item.qty,
+                        specText: item.specText,
+                        note: item.note,
+                        unitPrice: item.unitPrice,
+                        priceText: formatPrice(item.unitPrice * item.qty),
+                    };
+                });
                 return {
-                    key: item.key,
-                    name: item.name,
-                    qty: item.qty,
-                    specText: item.specText,
-                    note: item.note,
-                    unitPrice: item.unitPrice,
-                    priceText: formatPrice(item.unitPrice * item.qty),
+                    id: order.id,
+                    no: order.no,
+                    timeText: formatDateTime(order.createdAt),
+                    itemCount: order.itemCount,
+                    pickupName: order.pickupName,
+                    note: order.note,
+                    totalText: formatPrice(order.total),
+                    discountText: order.discount > 0 ? '-' + formatPrice(order.discount) : '',
+                    status: order.status,
+                    statusText: order.statusText,
+                    statusHint: order.statusHint,
+                    canPay: order.canPay,
+                    canCancel: order.canCancel,
+                    items: items,
                 };
             });
-            return {
-                id: order.id,
-                no: order.no,
-                timeText: formatDateTime(order.createdAt),
-                itemCount: order.itemCount,
-                pickupName: order.pickupName,
-                note: order.note,
-                totalText: formatPrice(order.total),
-                discountText: order.discount > 0 ? '-' + formatPrice(order.discount) : '',
-                status: order.status,
-                statusText: order.statusText,
-                statusHint: order.statusHint,
-                canPay: order.canPay,
-                canCancel: order.canCancel,
-                items: items,
-            };
-        });
-        this.setData({
-            orders: orders,
-            viewState: orders.length === 0 ? 'empty' : 'ready',
+            page.setData({
+                orders: orders,
+                viewState: orders.length === 0 ? 'empty' : 'ready',
+            });
         });
     },
 
@@ -81,8 +82,9 @@ Page({
                 if (!result.confirm) {
                     return;
                 }
-                orderStore.updateStatus(orderId, 'cancelled');
-                page.refresh();
+                ordersApi.updateStatus(orderId, 'cancelled').then(function () {
+                    page.refresh();
+                });
             },
         });
     },

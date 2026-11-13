@@ -1,0 +1,12 @@
+{
+  "name": "coffee-mini",
+  "version": "1.0.0",
+  "private": true,
+  "description": "拾光咖啡 · 微信小程序点单系统",
+  "scripts": {
+    "test": "node scripts/store-smoke-test.js"
+  },
+  "dependencies": {
+    "@tencent-ai/workbuddy-cloud-sdk": "dev"
+  }
+}

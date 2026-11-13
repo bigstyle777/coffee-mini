@@ -14,5 +14,8 @@ node_modules/
 *.log
 npm-debug.log*
 
+# 「构建 npm」生成的小程序依赖产物，由开发者工具生成，不入库
+miniprogram_npm/
+
 # 本地临时产物
 *.tmp

@@ -1,8 +1,8 @@
-const { createLocalOrderStore } = require('../../utils/order-store.js');
+const { getOrdersApi } = require('../../utils/data/index.js');
 const { formatPrice } = require('../../utils/format.js');
 const config = require('../../utils/app-config.js');
 
-const orderStore = createLocalOrderStore();
+const ordersApi = getOrdersApi();
 
 Page({
     data: {
@@ -19,31 +19,33 @@ Page({
 
     onLoad(options) {
         const orderId = options.orderId || '';
-        const result = orderStore.get(orderId);
-        if (result.error || !result.data) {
-            this.setData({ viewState: 'error' });
-            return;
-        }
-        const order = result.data;
-        const items = order.items.map(function (item) {
-            return {
-                key: item.key,
-                name: item.name,
-                qty: item.qty,
-                specText: item.specText,
-                priceText: formatPrice(item.unitPrice * item.qty),
-            };
-        });
-        this.setData({
-            orderId: order.id,
-            order: order,
-            items: items,
-            totalText: formatPrice(order.total),
-            subtotalText: formatPrice(order.subtotal),
-            discountText: order.discount > 0 ? '-' + formatPrice(order.discount) : '',
-            mockPay: config.payment.mock,
-            // 已经不是待支付状态，说明重复进入，直接提示
-            viewState: order.status === 'unpaid' ? 'ready' : 'already',
+        const page = this;
+        ordersApi.get(orderId).then(function (result) {
+            if (result.error || !result.data) {
+                page.setData({ viewState: 'error' });
+                return;
+            }
+            const order = result.data;
+            const items = order.items.map(function (item) {
+                return {
+                    key: item.key,
+                    name: item.name,
+                    qty: item.qty,
+                    specText: item.specText,
+                    priceText: formatPrice(item.unitPrice * item.qty),
+                };
+            });
+            page.setData({
+                orderId: order.id,
+                order: order,
+                items: items,
+                totalText: formatPrice(order.total),
+                subtotalText: formatPrice(order.subtotal),
+                discountText: order.discount > 0 ? '-' + formatPrice(order.discount) : '',
+                mockPay: config.payment.mock,
+                // 已经不是待支付状态，说明重复进入，直接提示
+                viewState: order.status === 'unpaid' ? 'ready' : 'already',
+            });
         });
     },
 
@@ -76,18 +78,19 @@ Page({
         this.setData({ paying: true });
         // 模拟支付：延迟 800ms 后把订单从「待支付」推进到「已下单」
         setTimeout(function () {
-            const updated = orderStore.updateStatus(order.id, 'placed');
-            if (updated.error) {
+            ordersApi.updateStatus(order.id, 'placed').then(function (updated) {
+                if (updated.error) {
+                    page.setData({ paying: false });
+                    wx.showModal({
+                        title: '支付失败',
+                        content: '订单状态异常，请回到订单页重试。',
+                        showCancel: false,
+                    });
+                    return;
+                }
                 page.setData({ paying: false });
-                wx.showModal({
-                    title: '支付失败',
-                    content: '订单状态异常，请回到订单页重试。',
-                    showCancel: false,
-                });
-                return;
-            }
-            page.setData({ paying: false });
-            wx.redirectTo({ url: '/pages/orders/orders?created=1' });
+                wx.redirectTo({ url: '/pages/orders/orders?created=1' });
+            });
         }, 800);
     },
 

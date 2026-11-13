@@ -1,9 +1,9 @@
-const { createLocalOrderStore } = require('../../utils/order-store.js');
+const { getOrdersApi } = require('../../utils/data/index.js');
 const menuStore = require('../../utils/menu-store.js');
 const { formatPrice, formatDateTime } = require('../../utils/format.js');
 const config = require('../../utils/app-config.js');
 
-const orderStore = createLocalOrderStore();
+const ordersApi = getOrdersApi();
 
 Page({
     data: {
@@ -25,16 +25,51 @@ Page({
         },
         menu: [],
         viewState: 'loading',
+        // 云端模式下才有意义：告诉店长这是自动刷新，不是静止画面
+        isRemote: false,
+        pollSeconds: Math.round((config.orderPollInterval || 0) / 1000),
     },
 
     onLoad() {
         // 演示用的前端口令，输入正确才进入店长端。
         // 真实项目里这必须是服务端校验的角色权限，不能只靠前端判断。
+        this.setData({ isRemote: ordersApi.isRemote === true });
     },
 
     onShow() {
         if (this.data.authorized) {
             this.refresh();
+            this.startPolling();
+        }
+    },
+
+    // 页面切到后台就停掉定时器，别在用户看不见的时候一直发请求
+    onHide() {
+        this.stopPolling();
+    },
+
+    onUnload() {
+        this.stopPolling();
+    },
+
+    // 轮询：每隔几秒重新拉一次订单。土办法，但最容易看懂，
+    // 也正好暴露它的缺点——不做这件事，店长端就不会自己出现新单。
+    startPolling() {
+        const interval = config.orderPollInterval;
+        if (!interval || interval <= 0) {
+            return;
+        }
+        const page = this;
+        this.stopPolling();
+        this.pollTimer = setInterval(function () {
+            page.refresh();
+        }, interval);
+    },
+
+    stopPolling() {
+        if (this.pollTimer) {
+            clearInterval(this.pollTimer);
+            this.pollTimer = null;
         }
     },
 
@@ -49,62 +84,70 @@ Page({
         }
         this.setData({ authorized: true });
         this.refresh();
+        this.startPolling();
     },
 
     refresh() {
+        const page = this;
         const tab = this.data.activeTab;
-        const listResult = orderStore.listByStatus(tab);
-        const statsResult = orderStore.stats();
+        Promise.all([ordersApi.listByStatus(tab), ordersApi.stats()]).then(function (results) {
+            const listResult = results[0];
+            const statsResult = results[1];
+            if (listResult.error || statsResult.error) {
+                page.setData({ viewState: 'error' });
+                return;
+            }
 
-        const orders = (listResult.data || []).map(function (order) {
-            const items = order.items.map(function (item) {
+            const orders = (listResult.data || []).map(function (order) {
+                const items = order.items.map(function (item) {
+                    return {
+                        key: item.key,
+                        name: item.name,
+                        qty: item.qty,
+                        specText: item.specText,
+                        note: item.note,
+                    };
+                });
                 return {
-                    key: item.key,
-                    name: item.name,
-                    qty: item.qty,
-                    specText: item.specText,
-                    note: item.note,
+                    id: order.id,
+                    no: order.no,
+                    timeText: formatDateTime(order.createdAt),
+                    status: order.status,
+                    statusText: order.statusText,
+                    pickupName: order.pickupName,
+                    note: order.note,
+                    itemCount: order.itemCount,
+                    totalText: formatPrice(order.total),
+                    items: items,
+                    canStart: order.canStart,
+                    canReady: order.canReady,
+                    canFinish: order.canFinish,
+                    canCancel: order.canCancel,
                 };
             });
-            return {
-                id: order.id,
-                no: order.no,
-                timeText: formatDateTime(order.createdAt),
-                status: order.status,
-                statusText: order.statusText,
-                pickupName: order.pickupName,
-                note: order.note,
-                itemCount: order.itemCount,
-                totalText: formatPrice(order.total),
-                items: items,
-                canStart: order.canStart,
-                canReady: order.canReady,
-                canFinish: order.canFinish,
-                canCancel: order.canCancel,
-            };
-        });
 
-        const menu = menuStore.listAll().map(function (product) {
-            return {
-                id: product.id,
-                name: product.name,
-                price: product.price,
-                priceText: formatPrice(product.price),
-                offline: product.offline,
-            };
-        });
+            const menu = menuStore.listAll().map(function (product) {
+                return {
+                    id: product.id,
+                    name: product.name,
+                    price: product.price,
+                    priceText: formatPrice(product.price),
+                    offline: product.offline,
+                };
+            });
 
-        const stats = statsResult.data;
-        this.setData({
-            orders: orders,
-            menu: menu,
-            stats: {
-                todayCount: stats.todayCount,
-                todayRevenueText: formatPrice(stats.todayRevenue),
-                pendingCount: stats.pendingCount,
-                makingCount: stats.makingCount,
-            },
-            viewState: orders.length === 0 ? 'empty' : 'ready',
+            const stats = statsResult.data;
+            page.setData({
+                orders: orders,
+                menu: menu,
+                stats: {
+                    todayCount: stats.todayCount,
+                    todayRevenueText: formatPrice(stats.todayRevenue),
+                    pendingCount: stats.pendingCount,
+                    makingCount: stats.makingCount,
+                },
+                viewState: orders.length === 0 ? 'empty' : 'ready',
+            });
         });
     },
 
@@ -117,12 +160,14 @@ Page({
     handleOrderAction(event) {
         const orderId = event.currentTarget.dataset.id;
         const next = event.currentTarget.dataset.next;
-        const result = orderStore.updateStatus(orderId, next);
-        if (result.error) {
-            wx.showToast({ title: '操作失败：' + result.error, icon: 'none' });
-            return;
-        }
-        this.refresh();
+        const page = this;
+        ordersApi.updateStatus(orderId, next).then(function (result) {
+            if (result.error) {
+                wx.showToast({ title: '操作失败：' + result.error, icon: 'none' });
+                return;
+            }
+            page.refresh();
+        });
     },
 
     handleCancelOrder(event) {
@@ -137,8 +182,9 @@ Page({
                 if (!result.confirm) {
                     return;
                 }
-                orderStore.updateStatus(orderId, 'cancelled');
-                page.refresh();
+                ordersApi.updateStatus(orderId, 'cancelled').then(function () {
+                    page.refresh();
+                });
             },
         });
     },
@@ -186,18 +232,22 @@ Page({
 
     handleClearOrders() {
         const page = this;
+        const isRemote = this.data.isRemote;
         wx.showModal({
             title: '清空订单记录',
-            content: '所有本地订单都会被删除，不可恢复。',
+            content: isRemote
+                ? '云端订单是所有人共享的，这一步会删掉全部顾客的订单，不可恢复。'
+                : '所有本地订单都会被删除，不可恢复。',
             confirmText: '清空',
             confirmColor: '#b4453c',
             success(result) {
                 if (!result.confirm) {
                     return;
                 }
-                orderStore.clear();
-                page.refresh();
-                wx.showToast({ title: '已清空', icon: 'success' });
+                ordersApi.clear().then(function () {
+                    page.refresh();
+                    wx.showToast({ title: '已清空', icon: 'success' });
+                });
             },
         });
     },

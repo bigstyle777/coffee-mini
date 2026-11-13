@@ -38,9 +38,11 @@
     </view>
 
     <view class="card info-card">
-        <text class="card-title">单机演示的边界</text>
-        <text class="paragraph">顾客端和店长端读写的是同一台设备上的同一份本地数据。所以「店长收到订单」只在这台设备内成立，换一台手机打开，店长端是空的。</text>
-        <text class="paragraph">跨设备收单必须有后端（云数据库或自建服务），本演示没有实现，也没有用假代码充数。</text>
+        <text class="card-title">数据放在哪</text>
+        <text class="paragraph" wx:if="{{isRemote}}">当前是云端模式：订单存在托管后端，顾客端和店长端读写的是同一份数据，换一台手机也能在店长端看到顾客的单。菜单与购物车仍然在本机。</text>
+        <text class="paragraph" wx:if="{{isRemote}}">演示环境的订单表对所有访问者开放读写，方便几个人一起试。真实项目必须改成服务端鉴权，否则任何人都能改你的订单。</text>
+        <text class="paragraph" wx:if="{{!isRemote}}">当前是本地模式：顾客端和店长端读写的是同一台设备上的同一份本地数据。所以「店长收到订单」只在这台设备内成立，换一台手机打开，店长端是空的。</text>
+        <text class="paragraph" wx:if="{{!isRemote}}">把 utils/app-config.js 里的 dataSource 改成 cloud，就切到云端模式。跨设备收单必须有后端。</text>
     </view>
 
     <view class="card info-card">

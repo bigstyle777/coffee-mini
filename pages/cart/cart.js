@@ -1,12 +1,12 @@
 const menuStore = require('../../utils/menu-store.js');
 const { createLocalCartStore } = require('../../utils/cart-store.js');
-const { createLocalOrderStore } = require('../../utils/order-store.js');
+const { getOrdersApi } = require('../../utils/data/index.js');
 const { formatPrice } = require('../../utils/format.js');
 const userStore = require('../../utils/user-store.js');
 const config = require('../../utils/app-config.js');
 
 const cartStore = createLocalCartStore();
-const orderStore = createLocalOrderStore();
+const ordersApi = getOrdersApi();
 
 Page({
     data: {
@@ -173,26 +173,28 @@ Page({
         });
 
         const discount = subtotal >= config.promotion.threshold ? config.promotion.amount : 0;
-        const created = orderStore.create({
-            items: items,
-            itemCount: count,
-            subtotal: subtotal,
-            discount: discount,
-            total: subtotal - discount,
-            pickupName: this.data.pickupTypes[this.data.pickupIndex].name,
-            note: this.data.note.trim(),
-            userId: user.id,
-        });
-
-        if (created.error) {
-            this.setData({ submitting: false });
-            wx.showToast({ title: '下单失败，请重试', icon: 'none' });
-            return;
-        }
-
-        cartStore.clear();
-        this.setData({ submitting: false });
-        wx.redirectTo({ url: '/pages/pay/pay?orderId=' + created.data.id });
+        const self = this;
+        ordersApi
+            .create({
+                items: items,
+                itemCount: count,
+                subtotal: subtotal,
+                discount: discount,
+                total: subtotal - discount,
+                pickupName: this.data.pickupTypes[this.data.pickupIndex].name,
+                note: this.data.note.trim(),
+                userId: user.id,
+            })
+            .then(function (created) {
+                if (created.error || !created.data) {
+                    self.setData({ submitting: false });
+                    wx.showToast({ title: '下单失败，请重试', icon: 'none' });
+                    return;
+                }
+                cartStore.clear();
+                self.setData({ submitting: false });
+                wx.redirectTo({ url: '/pages/pay/pay?orderId=' + created.data.id });
+            });
     },
 
     goMenu() {

@@ -1,10 +1,10 @@
 const config = require('../../utils/app-config.js');
-const { createLocalOrderStore } = require('../../utils/order-store.js');
+const { getOrdersApi } = require('../../utils/data/index.js');
 const { createLocalCartStore } = require('../../utils/cart-store.js');
 const userStore = require('../../utils/user-store.js');
 const menuStore = require('../../utils/menu-store.js');
 
-const orderStore = createLocalOrderStore();
+const ordersApi = getOrdersApi();
 const cartStore = createLocalCartStore();
 
 Page({
@@ -16,6 +16,7 @@ Page({
         shopPhone: '',
         mockPay: true,
         storageInfo: [],
+        isRemote: false,
     },
 
     onLoad() {
@@ -24,6 +25,7 @@ Page({
             shopAddress: config.shop.address,
             shopPhone: config.shop.phone,
             mockPay: config.payment.mock,
+            isRemote: ordersApi.isRemote === true,
         });
     },
 
@@ -32,9 +34,9 @@ Page({
     },
 
     refreshStorage() {
+        const page = this;
         const user = userStore.getIdentity();
         const cart = cartStore.list().data || [];
-        const orders = orderStore.list().data || [];
         const products = menuStore.listAll();
         let offlineCount = 0;
         for (let i = 0; i < products.length; i += 1) {
@@ -42,13 +44,31 @@ Page({
                 offlineCount += 1;
             }
         }
-        this.setData({
-            storageInfo: [
+        ordersApi.list().then(function (result) {
+            const orders = result.data || [];
+            const rows = [
                 { key: 'coffee_user_v1', name: '顾客身份（本地生成的模拟 id）', value: user.id },
                 { key: 'coffee_cart_v1', name: '购物车行数', value: cart.length + ' 行' },
-                { key: 'coffee_orders_v1', name: '订单数量', value: orders.length + ' 笔' },
-                { key: 'coffee_menu_overrides_v1', name: '菜单覆盖（售罄商品）', value: offlineCount + ' 个' },
-            ],
+            ];
+            if (ordersApi.isRemote) {
+                rows.push({
+                    key: 'orders 表 · 云端',
+                    name: '订单数量',
+                    value: result.error ? '读取失败' : orders.length + ' 笔',
+                });
+            } else {
+                rows.push({
+                    key: 'coffee_orders_v1',
+                    name: '订单数量',
+                    value: orders.length + ' 笔',
+                });
+            }
+            rows.push({
+                key: 'coffee_menu_overrides_v1',
+                name: '菜单覆盖（售罄商品）',
+                value: offlineCount + ' 个',
+            });
+            page.setData({ storageInfo: rows });
         });
     },
 
